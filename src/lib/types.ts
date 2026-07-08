@@ -11,6 +11,9 @@ export interface Book {
   finishedAt?: string;
   /** true = ユーザーが積読インボックスに追加した実物の本(伴走モード) */
   userAdded?: boolean;
+  /** ISBN検索(openBD)で確認できた場合のみ設定。表記ゆれのない正しい書誌情報の印 */
+  isbn?: string;
+  publisher?: string;
 }
 
 export interface Unit {

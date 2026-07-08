@@ -322,8 +322,18 @@ const SEED_BOOKS: SeedBook[] = [
   },
 ];
 
-/** 実物の本(ユーザー追加)用の伴走セッションを生成する */
-export function buildCompanionUnits(bookId: string): Omit<Unit, "readAt">[] {
+/**
+ * 実物の本(ユーザー追加)用の伴走セッションを生成する。
+ *
+ * 著作権上、本文そのものは扱えない。そのためツヅキが提供するのは
+ * 「実際の本を、実際の目次に沿って、1見出しずつ読ませる進行表」だ。
+ * `chapters` にユーザーが貼り付けた目次(1行1見出し)を渡すと、
+ * その本固有の章立てでセッションが組まれる。省略時は汎用の12回構成にフォールバックする。
+ */
+export function buildCompanionUnits(
+  bookId: string,
+  chapters?: string[]
+): Omit<Unit, "readAt">[] {
   const units: Omit<Unit, "readAt">[] = [
     {
       id: `${bookId}-u0`,
@@ -335,16 +345,39 @@ export function buildCompanionUnits(bookId: string): Omit<Unit, "readAt">[] {
       isPrologue: true,
       paragraphs: [
         "本を読み始める前に、30秒だけ立ち止まる。「この本から、何を一つ持ち帰りたいか」。目的を持って読む人と、なんとなく読む人では、同じ本から得るものがまるで違う。",
-        "この本は12回の小さなセッションで読み切る設計だ。1回のセッションは「1見出しぶん(約5分)だけ読む」。それ以上読んでもいいが、義務は1見出しだけ。",
+        chapters && chapters.length > 0
+          ? `この本はあなたが登録した目次どおり、${chapters.length}回の小さなセッションで読み切る設計だ。1回のセッションは「1見出しぶん(約5分)だけ読む」。それ以上読んでもいいが、義務は1見出しだけ。`
+          : "この本は12回の小さなセッションで読み切る設計だ。1回のセッションは「1見出しぶん(約5分)だけ読む」。それ以上読んでもいいが、義務は1見出しだけ。",
         "準備はこれで完了。次のセッションから、実際に本を開こう。",
       ],
     },
   ];
-  const phases = [
-    "序盤 まず開く",
-    "中盤 芯をつかむ",
-    "終盤 読み切る",
-  ];
+
+  if (chapters && chapters.length > 0) {
+    const partCount = Math.min(3, chapters.length);
+    chapters.forEach((chapterTitle, i) => {
+      const part = Math.min(
+        partCount,
+        Math.ceil(((i + 1) / chapters.length) * partCount)
+      );
+      units.push({
+        id: `${bookId}-u${i + 1}`,
+        bookId,
+        order: i + 1,
+        chapter: part,
+        chapterTitle: `${["", "序盤", "中盤", "終盤"][part]}`,
+        title: chapterTitle.trim(),
+        paragraphs: [
+          `手元の本を開いて、目次の「${chapterTitle.trim()}」を読もう。目安は5分。1見出し読み終えたら十分、それ以上は自由だ。`,
+          "読み終えたらここに戻って「読んだ」を押し、印象に残った一つを「明日どう使うか」の形で1行だけ書く。完璧な要約は要らない。自分の言葉なら、稚拙でいい。",
+          `あなたが登録した目次どおり、全${chapters.length}回でこの本を読み切る計算だ。今日の1見出しが、その1回分になる。`,
+        ],
+      });
+    });
+    return units;
+  }
+
+  const phases = ["序盤 まず開く", "中盤 芯をつかむ", "終盤 読み切る"];
   for (let i = 1; i <= 12; i++) {
     const chapter = i <= 4 ? 1 : i <= 8 ? 2 : 3;
     units.push({

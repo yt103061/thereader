@@ -106,6 +106,22 @@ const firstQueueItem = await page.locator("li").filter({ hasText: "次に燃え�
 check("「次に読む」でキュー先頭へ", firstQueueItem.includes("イシューからはじめよ"));
 await shot("10-inbox");
 
+// ---- ISBNで正確に登録(openBD経由のサーバーサイド書誌検索) ----
+await page.click("text=ISBNで正確に登録");
+await page.fill("input[placeholder*='ISBN']", "9784478025819");
+await shot("10b-isbn-form");
+await page.click("text=書誌情報を確認する");
+await page.waitForSelector("text=この本が見つかりました", { timeout: 10000 });
+check("ISBN検索で書誌情報を取得", await page.isVisible("text=嫌われる勇気"));
+await page.fill(
+  "textarea[placeholder*='第1章']",
+  "第1章 トラウマを否定せよ\n第2章 すべての悩みは対人関係\n第3章 他者の課題を切り捨てる"
+);
+await shot("10c-isbn-found");
+await page.click("text=この内容で追加する");
+await page.waitForSelector("text=嫌われる勇気");
+check("目次つきでISBN登録した本がキューに入る", await page.isVisible("li:has-text('嫌われる勇気')"));
+
 // ---- 知識資産 ----
 await page.click("text=知識資産");
 await page.waitForURL("**/cards");

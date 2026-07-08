@@ -210,23 +210,38 @@ export function completeUnit(
   return next;
 }
 
-/** 積読インボックスへの3秒キャプチャ。実物の本には伴走セッションを自動生成する */
-export function addBook(state: AppState, title: string, author: string): AppState {
+export interface AddBookInput {
+  title: string;
+  author: string;
+  isbn?: string;
+  publisher?: string;
+  /** ユーザーが貼り付けた目次(1見出し1行)。あれば実際の章立てでセッションを組む */
+  chapters?: string[];
+}
+
+/**
+ * 積読インボックスへの追加。
+ * タイトル+著者だけの3秒キャプチャにも、ISBN確認済み・目次入力ありの
+ * 「本格登録」にも対応する。実物の本には伴走セッションを自動生成する。
+ */
+export function addBook(state: AppState, input: AddBookInput): AppState {
   const id = `book-${Date.now()}`;
   const colors = ["#8b3a3a", "#4a5d23", "#5b4a8b", "#8b6f3a", "#3a6b8b"];
   const book: Book = {
     id,
-    title: title.trim(),
-    author: author.trim() || "著者未設定",
+    title: input.title.trim(),
+    author: input.author.trim() || "著者未設定",
     status: "inbox",
     coverColor: colors[state.books.length % colors.length],
     addedAt: new Date().toISOString(),
     userAdded: true,
+    isbn: input.isbn,
+    publisher: input.publisher,
   };
   const withBook: AppState = {
     ...state,
     books: [...state.books, book],
-    units: [...state.units, ...buildCompanionUnits(id)],
+    units: [...state.units, ...buildCompanionUnits(id, input.chapters)],
   };
   return promoteNext(withBook);
 }
