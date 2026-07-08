@@ -1,0 +1,18 @@
+{
+  "name": "ツヅキ — 開いた瞬間、続きから。",
+  "short_name": "ツヅキ",
+  "description": "「読みたい」を意志ではなく仕組みで「使える知識」に変え続ける、社会人のためのビジネス書アプリ。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f5ef",
+  "theme_color": "#34558b",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
